@@ -106,6 +106,14 @@
 .end function
 .//
 .//============================================================================
+.function MarkKeyedTimers
+  .invoke r = TE_TIM_select()
+  .assign te_tim = r.result
+  .assign te_tim.keyed_timer_support = true
+  .print "MarkKeyedTimers:  Use keyed timers."
+.end function
+.//
+.//============================================================================
 .function TagMaximumInterleavedBridges
   .param integer user_specified_size
   .invoke r = TM_SYSTAG_select()
@@ -230,6 +238,14 @@
     .assign tm_systag.SystemCPortsType = "sc_interface"
   .end if
   .assign attr_result = tm_systag
+.end function
+.//
+.function TE_TIM_select .// te_tim
+  .select any te_tim from instances of TE_TIM
+  .if ( empty te_tim )
+    .print "TE_TIM_select:  singleton instance of TE_TIM does not yet exist."
+  .end if
+  .assign attr_result = te_tim
 .end function
 .//
 .//============================================================================
@@ -357,6 +373,9 @@
       .invoke r = T_atoi( p1 )
       .assign i1 = r.result
       .invoke TagMaximumPendingOoaTimers(i1)
+    .elif ( "MarkKeyedTimers" == f )
+      .// MarkKeyedTimers()
+      .invoke MarkKeyedTimers()
     .elif ( "TagMaximumInterleavedBridges" == f )
       .// TagMaximumInterleavedBridges("user_specified_size":integer)
       .invoke r = T_atoi( p1 )

@@ -151,6 +151,16 @@
 .//
 .//
 .//============================================================================
+.// MarkKeyedTimers()
+.//
+.// Use keyed timers, reducing interference between various timer clients.  
+.//
+.// Example:
+.//   .invoke MarkKeyedTimers()
+.//============================================================================
+.//
+.//
+.//============================================================================
 .// TagMaximumInterleavedBridges( value )
 .//
 .// Where the input parameter(s) are:
