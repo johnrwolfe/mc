@@ -13712,26 +13712,34 @@ ooaofooa_smt_assign( ooaofooa_ACT_AI * p_act_ai, ooaofooa_TE_SMT * p_te_smt )
         d = Escher_strcpy( d, ( Escher_stradd( d, "=0" ) ) );
       }
       else {
-        /* IF ( te_sys.InstanceLoading ) */
-        if ( ((ooaofooa_TE_SYS *)xtUML_detect_empty_handle( te_sys, "TE_SYS", "te_sys.InstanceLoading" ))->InstanceLoading ) {
-          /* ASSIGN d = ( d + ={0 ) */
-          d = Escher_strcpy( d, ( Escher_stradd( d, "={0" ) ) );
-          /* IF ( element_count < 128 ) */
-          if ( element_count < 128 ) {
-            i_t i;
-            /* ASSIGN i = ( element_count - 1 ) */
-            i = ( element_count - 1 );
-            /* WHILE ( i > 0 ) */
-            while ( i > 0 ) {
-              /* ASSIGN i = ( i - 1 ) */
-              i = ( i - 1 );
-              /* ASSIGN d = ( d + ,0 ) */
-              d = Escher_strcpy( d, ( Escher_stradd( d, ",0" ) ) );
-            }
+        ooaofooa_TE_DIM * root_te_dim=0;
+        /* SELECT one root_te_dim RELATED BY root_te_val->TE_DIM[R2079] */
+        root_te_dim = ( 0 != root_te_val ) ? root_te_val->TE_DIM_R2079 : 0;
+        /* IF ( not_empty root_te_dim ) */
+        if ( ( 0 != root_te_dim ) ) {
+          /* IF ( element_count < root_te_dim.elementCount ) */
+          if ( element_count < ((ooaofooa_TE_DIM *)xtUML_detect_empty_handle( root_te_dim, "TE_DIM", "root_te_dim.elementCount" ))->elementCount ) {
+            /* ASSIGN element_count = root_te_dim.elementCount */
+            element_count = ((ooaofooa_TE_DIM *)xtUML_detect_empty_handle( root_te_dim, "TE_DIM", "root_te_dim.elementCount" ))->elementCount;
           }
-          /* ASSIGN d = ( d + } ) */
-          d = Escher_strcpy( d, ( Escher_stradd( d, "}" ) ) );
         }
+        /* ASSIGN d = ( d + ={0 ) */
+        d = Escher_strcpy( d, ( Escher_stradd( d, "={0" ) ) );
+        /* IF ( element_count < 128 ) */
+        if ( element_count < 128 ) {
+          i_t i;
+          /* ASSIGN i = ( element_count - 1 ) */
+          i = ( element_count - 1 );
+          /* WHILE ( i > 0 ) */
+          while ( i > 0 ) {
+            /* ASSIGN i = ( i - 1 ) */
+            i = ( i - 1 );
+            /* ASSIGN d = ( d + ,0 ) */
+            d = Escher_strcpy( d, ( Escher_stradd( d, ",0" ) ) );
+          }
+        }
+        /* ASSIGN d = ( d + } ) */
+        d = Escher_strcpy( d, ( Escher_stradd( d, "}" ) ) );
       }
       /* ASSIGN d = ( d + ; ) */
       d = Escher_strcpy( d, ( Escher_stradd( d, ";" ) ) );
@@ -18618,8 +18626,28 @@ te_c->cId = Escher_ID_factory();
   tm_build = (ooaofooa_TM_BUILD *) Escher_SetGetAny( &pG_ooaofooa_TM_BUILD_extent.active );
   /* ASSIGN markedsystems = 0 */
   markedsystems = 0;
-  /* IF ( not_empty tm_build ) */
-  if ( ( 0 != tm_build ) ) {
+  /* IF ( empty tm_build ) */
+  if ( ( 0 == tm_build ) ) {
+    i_t sys_ep_pkg_count;Escher_ObjectSet_s sys_ep_pkgs_space={0}; Escher_ObjectSet_s * sys_ep_pkgs = &sys_ep_pkgs_space;
+    /* SELECT any system_ep_pkg RELATED BY s_sys->EP_PKG[R1401] */
+    system_ep_pkg = ( 0 != s_sys ) ? (ooaofooa_EP_PKG *) Escher_SetGetAny( &s_sys->EP_PKG_R1401_contains ) : 0;
+    /* SELECT many sys_ep_pkgs RELATED BY s_sys->EP_PKG[R1401] */
+    Escher_ClearSet( sys_ep_pkgs );
+    if ( 0 != s_sys ) {
+      Escher_CopySet( sys_ep_pkgs, &s_sys->EP_PKG_R1401_contains );
+    }
+    /* ASSIGN sys_ep_pkg_count = cardinality sys_ep_pkgs */
+    sys_ep_pkg_count = Escher_SetCardinality( sys_ep_pkgs );
+    /* IF ( sys_ep_pkg_count > 1 ) */
+    if ( sys_ep_pkg_count > 1 ) {
+      /* T::print( s:WARNING:  Identify a package to build using MarkSystemConfigurationPackage in system.mark. ) */
+      T_print( "WARNING:  Identify a package to build using MarkSystemConfigurationPackage in system.mark." );
+      /* T::print( s:WARNING:  ${system_ep_pkg.Name} has been selected arbitrarily as the build configuration. ) */
+      T_print( ({c_t*s=Escher_strget();T_T("WARNING:  ");T_T(system_ep_pkg->Name);T_T(" has been selected arbitrarily as the build configuration.");}) );
+    }
+    Escher_ClearSet( sys_ep_pkgs ); 
+  }
+  else {
     /* SELECT any system_ep_pkg FROM INSTANCES OF EP_PKG WHERE SELECTED.Name == tm_build.package_to_build */
     system_ep_pkg = 0;
     { ooaofooa_EP_PKG * selected;
@@ -22326,10 +22354,13 @@ te_ee->ID = Escher_ID_factory();
         if ( Escher_strcmp( o_attr_Descrip_Persistent, "false" ) != 0 ) {
           /* IF ( 5 == te_dt.Core_Typ ) */
           if ( 5 == ((ooaofooa_TE_DT *)xtUML_detect_empty_handle( te_dt, "TE_DT", "te_dt.Core_Typ" ))->Core_Typ ) {
+            ooaofooa_TE_DMA * te_dma=0;
+            /* SELECT any te_dma FROM INSTANCES OF TE_DMA */
+            te_dma = (ooaofooa_TE_DMA *) Escher_SetGetAny( &pG_ooaofooa_TE_DMA_extent.active );
             /* ASSIGN te_class.attribute_format = ( ( te_class.attribute_format + delimiter ) + te_dt.string_format ) */
             ((ooaofooa_TE_CLASS *)xtUML_detect_empty_handle( te_class, "TE_CLASS", "te_class.attribute_format" ))->attribute_format = Escher_strcpy( ((ooaofooa_TE_CLASS *)xtUML_detect_empty_handle( te_class, "TE_CLASS", "te_class.attribute_format" ))->attribute_format, ( Escher_stradd( ( Escher_stradd( ((ooaofooa_TE_CLASS *)xtUML_detect_empty_handle( te_class, "TE_CLASS", "te_class.attribute_format" ))->attribute_format, delimiter ) ), ((ooaofooa_TE_DT *)xtUML_detect_empty_handle( te_dt, "TE_DT", "te_dt.string_format" ))->string_format ) ) );
-            /* ASSIGN te_class.attribute_dump = ( ( ( te_class.attribute_dump + ,\n     ) + ( te_string.itoa + ( self-> ) ) + ( te_attr.GeneratedName +  ) ) ) */
-            ((ooaofooa_TE_CLASS *)xtUML_detect_empty_handle( te_class, "TE_CLASS", "te_class.attribute_dump" ))->attribute_dump = Escher_strcpy( ((ooaofooa_TE_CLASS *)xtUML_detect_empty_handle( te_class, "TE_CLASS", "te_class.attribute_dump" ))->attribute_dump, ( Escher_stradd( ( Escher_stradd( ( Escher_stradd( ((ooaofooa_TE_CLASS *)xtUML_detect_empty_handle( te_class, "TE_CLASS", "te_class.attribute_dump" ))->attribute_dump, ",\n    " ) ), ( Escher_stradd( ((ooaofooa_TE_STRING *)xtUML_detect_empty_handle( te_string, "TE_STRING", "te_string.itoa" ))->itoa, "( self->" ) ) ) ), ( Escher_stradd( ((ooaofooa_TE_ATTR *)xtUML_detect_empty_handle( te_attr, "TE_ATTR", "te_attr.GeneratedName" ))->GeneratedName, " )" ) ) ) ) );
+            /* ASSIGN te_class.attribute_dump = ( ( ( ( te_class.attribute_dump + ,\n     ) + te_string.u128touuid ) + ( (  + te_set.scope ) ) + ( ( te_dma.allocate + ( 39 ),  self-> ) + ( te_attr.GeneratedName +  ) ) ) ) */
+            ((ooaofooa_TE_CLASS *)xtUML_detect_empty_handle( te_class, "TE_CLASS", "te_class.attribute_dump" ))->attribute_dump = Escher_strcpy( ((ooaofooa_TE_CLASS *)xtUML_detect_empty_handle( te_class, "TE_CLASS", "te_class.attribute_dump" ))->attribute_dump, ( Escher_stradd( ( Escher_stradd( ( Escher_stradd( ( Escher_stradd( ((ooaofooa_TE_CLASS *)xtUML_detect_empty_handle( te_class, "TE_CLASS", "te_class.attribute_dump" ))->attribute_dump, ",\n    " ) ), ((ooaofooa_TE_STRING *)xtUML_detect_empty_handle( te_string, "TE_STRING", "te_string.u128touuid" ))->u128touuid ) ), ( Escher_stradd( "( ", ((ooaofooa_TE_SET *)xtUML_detect_empty_handle( te_set, "TE_SET", "te_set.scope" ))->scope ) ) ) ), ( Escher_stradd( ( Escher_stradd( ((ooaofooa_TE_DMA *)xtUML_detect_empty_handle( te_dma, "TE_DMA", "te_dma.allocate" ))->allocate, "( 39 ),  self->" ) ), ( Escher_stradd( ((ooaofooa_TE_ATTR *)xtUML_detect_empty_handle( te_attr, "TE_ATTR", "te_attr.GeneratedName" ))->GeneratedName, " )" ) ) ) ) ) ) );
           }
           else if ( Escher_strcmp( "%p", ((ooaofooa_TE_DT *)xtUML_detect_empty_handle( te_dt, "TE_DT", "te_dt.string_format" ))->string_format ) == 0 ) {
             /* ASSIGN te_class.attribute_format = ( ( te_class.attribute_format + delimiter ) + %ld ) */
@@ -25934,6 +25965,10 @@ Escher_idf ooaofooa_instance_dumpers[ ooaofooa_MAX_CLASS_NUMBERS ] = {
   ooaofooa_CNST_LFSC_instancedumper,
   ooaofooa_CNST_LSC_instancedumper,
   ooaofooa_S_ENUM_instancedumper,
+  ooaofooa_D_DEPL_instancedumper,
+  ooaofooa_D_TERM_instancedumper,
+  ooaofooa_D_TSVC_instancedumper,
+  ooaofooa_D_TSPARM_instancedumper,
   ooaofooa_S_SYNC_instancedumper,
   ooaofooa_S_SPARM_instancedumper,
   ooaofooa_S_SYS_instancedumper,
@@ -26314,6 +26349,10 @@ Escher_Extent_t * const ooaofooa_class_info[ ooaofooa_MAX_CLASS_NUMBERS ] = {
   &pG_ooaofooa_CNST_LFSC_extent,
   &pG_ooaofooa_CNST_LSC_extent,
   &pG_ooaofooa_S_ENUM_extent,
+  &pG_ooaofooa_D_DEPL_extent,
+  &pG_ooaofooa_D_TERM_extent,
+  &pG_ooaofooa_D_TSVC_extent,
+  &pG_ooaofooa_D_TSPARM_extent,
   &pG_ooaofooa_S_SYNC_extent,
   &pG_ooaofooa_S_SPARM_extent,
   &pG_ooaofooa_S_SYS_extent,
