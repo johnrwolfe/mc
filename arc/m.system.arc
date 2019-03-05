@@ -506,6 +506,9 @@
       .assign i4 = r.result
       .invoke MarkClassToTask(p1,p2,p3,i4)
     .// domain
+    .elif ( "DeriveSDTNameFromPackage" == f )
+      .// DeriveSDTNameFromPackage("package_name")
+      .invoke DeriveSDTNameFromPackage(p1)
     .elif ( "TagFunctionTranslationOff" == f )
       .// TagFunctionTranslationOff("function_name")
       .invoke TagFunctionTranslationOff(p1)

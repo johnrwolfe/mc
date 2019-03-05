@@ -6,6 +6,30 @@
 .// specified in the (user supplied/modified) domain.mark file.
 .//============================================================================
 .//
+//============================================================================
+.// Derive structured data type name from the innermost package containing it.
+.// This allows generation of consistently named data structures from 
+.// multiple projects using the same package containing a collection of 
+.// structured data types.  This is especially helpful when connecting with
+.// realized code using these same data structures.
+.// This function belongs in m.datatype.arc, but it needs to run after 
+.// sys_populate(), and datatype.mark runs before it.  So, the function is
+.// in here, and it must be invoked from the domain.mark so that it runs
+.// after sys_populate() is executed.
+.//============================================================================
+.function DeriveSDTNameFromPackage
+  .param string package_name
+  .select any ep_pkg from instances of EP_PKG where ( selected.Name == package_name )
+  .if ( not_empty ep_pkg )
+    .select many te_dts related by ep_pkg->PE_PE[R8000]->S_DT[R8001]->S_SDT[R17]->S_DT[R17]->TE_DT[R2021]
+    .for each te_dt in te_dts
+      .assign te_dt.ExtName = package_name + "_" + te_dt.Name
+    .end for
+    .print "DeriveSDTNameFromPackage:  Naming structured data types based on ${package_name}."
+  .else
+    .print "DeriveSDTNameFromPackage:  Package, ${package_name}, not found."
+  .end if
+.end function
 .//
 .//============================================================================
 .// Disable the translation of function processing semantics.
